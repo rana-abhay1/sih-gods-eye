@@ -69,7 +69,7 @@ export default function PcapAnalyzer({ onThreatsDetected, API_URL = 'http://loca
   return (
     <div className="view-page">
       <div className="view-page__header">
-        <h2 className="view-page__title">📁 PCAP Analyzer</h2>
+        <h2 className="view-page__title"><i className="fa-solid fa-file-lines" style={{marginRight: '10px'}}></i>PCAP Analyzer</h2>
         <p className="view-page__subtitle">Upload a pcap/pcapng file for AI/ML-powered threat detection</p>
       </div>
 
@@ -88,7 +88,7 @@ export default function PcapAnalyzer({ onThreatsDetected, API_URL = 'http://loca
           hidden
           onChange={(e) => handleFile(e.target.files[0])}
         />
-        <div className="pcap-dropzone__icon">{file ? '📄' : '📥'}</div>
+        <div className="pcap-dropzone__icon"><i className={`fa-solid ${file ? 'fa-file-circle-check' : 'fa-cloud-arrow-up'}`}></i></div>
         {file ? (
           <div className="pcap-dropzone__info">
             <span className="pcap-dropzone__filename">{file.name}</span>
@@ -111,7 +111,7 @@ export default function PcapAnalyzer({ onThreatsDetected, API_URL = 'http://loca
         {analyzing ? (
           <><span className="pcap-spinner"></span> Analyzing Traffic...</>
         ) : (
-          <>🔍 Analyze for Threats</>
+          <><i className="fa-solid fa-magnifying-glass-chart" style={{marginRight: '8px'}}></i>Analyze for Threats</>
         )}
       </button>
 
@@ -167,7 +167,7 @@ export default function PcapAnalyzer({ onThreatsDetected, API_URL = 'http://loca
           {result.threats.length > 0 ? (
             <div className="pcap-threats">
               <h3 className="pcap-threats__title">
-                🚨 Detected {result.threats.length} Threat{result.threats.length !== 1 ? 's' : ''}
+                <i className="fa-solid fa-skull-crossbones" style={{marginRight: '8px'}}></i>Detected {result.threats.length} Threat{result.threats.length !== 1 ? 's' : ''}
               </h3>
               {result.threats.map(threat => {
                 const sev = SEVERITY_CONFIG[threat.severity] || SEVERITY_CONFIG.low
@@ -214,7 +214,7 @@ export default function PcapAnalyzer({ onThreatsDetected, API_URL = 'http://loca
             </div>
           ) : (
             <div className="pcap-clean">
-              <span className="pcap-clean__icon">✅</span>
+              <span className="pcap-clean__icon"><i className="fa-solid fa-circle-check"></i></span>
               <span className="pcap-clean__text">No threats detected — traffic appears clean</span>
             </div>
           )}

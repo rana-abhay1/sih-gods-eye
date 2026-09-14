@@ -31,7 +31,7 @@ export default function NetworkTopology({ threats }) {
   return (
     <div className="network-topology">
       <div className="network-topology__header">
-        <span className="network-topology__title">🗺️ Network Topology</span>
+        <span className="network-topology__title"><i className="fa-solid fa-diagram-project" style={{marginRight: '8px'}}></i>Network Topology</span>
         <span className="network-topology__status">
           {activeThreatCount > 0 ? (
             <span className="network-topology__status--alert">

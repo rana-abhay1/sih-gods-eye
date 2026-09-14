@@ -75,7 +75,7 @@ export default function ThreatsView({ threats, selectedThreat, onSelectThreat })
   return (
     <div className="view-page">
       <div className="view-page__header">
-        <h2 className="view-page__title">🚨 Threat Management</h2>
+        <h2 className="view-page__title"><i className="fa-solid fa-triangle-exclamation" style={{marginRight: '10px'}}></i>Threat Management</h2>
         <p className="view-page__subtitle">AI/ML-detected threats with confidence scoring and evidence</p>
       </div>
 

@@ -14,9 +14,17 @@ from flask_cors import CORS
 
 from threat_detector import detect_threats, parse_pcap, extract_features
 from live_capture import engine as capture_engine
+from ml_features import MLFeatureExtractor
+from ml_classifier import ThreatClassifier
+from ml_inference import StreamingInferenceEngine
 
 app = Flask(__name__)
 CORS(app)
+
+# Initialize ML components
+feature_extractor = MLFeatureExtractor()
+threat_classifier = ThreatClassifier()
+inference_engine = StreamingInferenceEngine()
 
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'uploads')
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -32,8 +40,10 @@ def health():
     return jsonify({
         'status': 'ok',
         'service': 'God\'s Eye Threat Detector',
-        'version': '1.0.0',
+        'version': '2.0.0',
         'live_capture': capture_engine.is_running,
+        'ml_inference': inference_engine.is_running,
+        'ml_stats': inference_engine.stats,
     })
 
 
@@ -41,7 +51,7 @@ def health():
 
 @app.route('/api/analyze', methods=['POST'])
 def analyze_pcap():
-    """Upload a pcap/pcapng file for threat analysis."""
+    """Upload a pcap/pcapng file for threat analysis with ML pipeline."""
     if 'file' not in request.files:
         return jsonify({'error': 'No file provided. Send a .pcap or .pcapng file as "file".'}), 400
 
@@ -61,8 +71,39 @@ def analyze_pcap():
     try:
         start = time.time()
         packets = parse_pcap(file_path)
-        features = extract_features(packets)
-        threats = detect_threats(file_path)
+        
+        # Build protocol counts from packets
+        import collections
+        proto_counts = collections.Counter(p.protocol for p in packets)
+        
+        # Extract ML features
+        ml_features = feature_extractor.extract_features(packets)
+        
+        # Get ML predictions
+        ml_predictions = threat_classifier.predict(ml_features)
+        
+        # Also get rule-based threats for comparison
+        rule_threats = detect_threats(file_path)
+        
+        # Combine ML and rule-based threats
+        all_threats = rule_threats
+        for pred in ml_predictions:
+            threat_dict = pred.to_dict()
+            threat_dict['id'] = f"ML-{len(all_threats)+1:04d}"
+            threat_dict['status'] = 'active'
+            threat_dict['type'] = pred.threat_type
+            threat_dict['source_ip'] = packets[0].src_ip if packets else 'unknown'
+            threat_dict['dest_ip'] = packets[0].dst_ip if packets else 'unknown'
+            threat_dict['dest_port'] = 0
+            threat_dict['source_port'] = 0
+            threat_dict['protocol'] = 'Mixed'
+            threat_dict['risk_score'] = pred.risk_score
+            threat_dict['packets_analyzed'] = len(packets)
+            threat_dict['bytes_transferred'] = sum(p.size for p in packets)
+            threat_dict['timestamp'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+            threat_dict['evidence'] = []
+            all_threats.append(threat_dict)
+        
         elapsed = round(time.time() - start, 3)
 
         result = {
@@ -72,19 +113,28 @@ def analyze_pcap():
             'elapsed_seconds': elapsed,
             'packet_count': len(packets),
             'features': {
-                'total_packets': features.get('total_packets', 0),
-                'unique_src_ips': features.get('unique_src_ips', 0),
-                'unique_dst_ips': features.get('unique_dst_ips', 0),
-                'unique_dst_ports': features.get('unique_dst_ports', 0),
-                'total_bytes': features.get('total_bytes', 0),
-                'duration': round(features.get('duration', 0), 2),
-                'pps': round(features.get('pps', 0), 1),
-                'protocols': features.get('protocols', {}),
-                'syn_count': features.get('syn_count', 0),
-                'dns_count': features.get('dns_count', 0),
+                'total_packets': ml_features.total_packets,
+                'unique_src_ips': ml_features.unique_src_ips,
+                'unique_dst_ips': ml_features.unique_dst_ips,
+                'unique_dst_ports': ml_features.unique_dst_ports,
+                'total_bytes': ml_features.total_bytes,
+                'duration': round(ml_features.duration, 2),
+                'pps': round(ml_features.packets_per_second, 1),
+                'src_ip_entropy': round(ml_features.src_ip_entropy, 2),
+                'dst_ip_entropy': round(ml_features.dst_ip_entropy, 2),
+                'syn_count': ml_features.syn_count,
+                'dns_count': ml_features.dns_count,
+                'port_scan_score': round(ml_features.port_scan_score, 3),
+                'ddos_score': round(ml_features.dls_score, 3),
+                'brute_force_score': round(ml_features.bf_score, 3),
+                'exfil_score': round(ml_features.exfil_score, 3),
+                'tunnel_score': round(ml_features.tunnel_score, 3),
+                'protocols': dict(proto_counts),
             },
-            'threats': threats,
-            'threat_count': len(threats),
+            'ml_predictions': [p.to_dict() for p in ml_predictions],
+            'threats': all_threats,
+            'threat_count': len(all_threats),
+            'ml_threat_count': len(ml_predictions),
         }
 
         analysis_store[analysis_id] = result
@@ -128,37 +178,59 @@ def get_interfaces():
 
 @app.route('/api/capture/start', methods=['POST'])
 def start_capture():
-    """Start live packet capture on a network interface."""
-    if capture_engine.is_running:
-        return jsonify({'status': 'already_running', 'interface': capture_engine.interface}), 409
+    """Start live packet capture on a network interface with ML inference."""
+    try:
+        if capture_engine.is_running:
+            return jsonify({'status': 'already_running', 'interface': capture_engine.interface}), 409
 
-    data = request.get_json(silent=True) or {}
-    interface = data.get('interface')
+        data = request.get_json(silent=True) or {}
+        interface = data.get('interface')
 
-    result = capture_engine.start(interface=interface)
-    # Give the capture thread a moment to determine mode
-    import time; time.sleep(0.5)
-    result['sim_mode'] = capture_engine.sim_mode
-    result['error'] = capture_engine.error_message
-    return jsonify(result)
+        result = capture_engine.start(interface=interface)
+        
+        # Start ML inference engine
+        if not inference_engine.is_running:
+            inference_engine.start()
+        
+        # Give the capture thread a moment to determine mode
+        time.sleep(0.5)
+        result['sim_mode'] = capture_engine.sim_mode
+        result['error'] = capture_engine.error_message
+        result['ml_inference'] = inference_engine.is_running
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': f'Start failed: {str(e)}', 'status': 'failed'}), 500
 
 
 @app.route('/api/capture/stop', methods=['POST'])
 def stop_capture():
-    """Stop live packet capture."""
+    """Stop live packet capture and ML inference."""
     result = capture_engine.stop()
+    
+    # Stop ML inference engine
+    if inference_engine.is_running:
+        inference_engine.stop()
+    
+    result['ml_stats'] = inference_engine.stats
     return jsonify(result)
 
 
 @app.route('/api/capture/status', methods=['GET'])
 def capture_status():
-    """Get current capture status and stats."""
+    """Get current capture status and ML inference stats."""
+    engine_stats = capture_engine.stats
     return jsonify({
         'running': capture_engine.is_running,
         'interface': capture_engine.interface,
         'sim_mode': capture_engine.sim_mode,
         'error': capture_engine.error_message,
-        'stats': capture_engine.stats,
+        'stats': engine_stats,
+        'ml_inference': capture_engine.is_running,
+        'ml_stats': {
+            'windows_analyzed': engine_stats.get('ml_windows_analyzed', 0),
+            'threats_detected': engine_stats.get('ml_threats_detected', 0),
+            'avg_inference_time_ms': engine_stats.get('ml_avg_inference_ms', 0.0),
+        },
     })
 
 

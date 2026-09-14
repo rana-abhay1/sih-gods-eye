@@ -3,7 +3,7 @@ export default function TrafficChart({ history }) {
     return (
       <div className="traffic-chart">
         <div className="traffic-chart__header">
-          <span className="traffic-chart__title">📈 Traffic Volume</span>
+          <span className="traffic-chart__title"><i className="fa-solid fa-chart-column" style={{marginRight: '8px'}}></i>Traffic Volume</span>
         </div>
         <div className="traffic-empty" style={{ padding: '40px' }}>
           No traffic data yet. Start a live capture to see real-time traffic volume.
@@ -26,7 +26,7 @@ export default function TrafficChart({ history }) {
   return (
     <div className="traffic-chart">
       <div className="traffic-chart__header">
-        <span className="traffic-chart__title">📈 Traffic Volume (24h)</span>
+        <span className="traffic-chart__title"><i className="fa-solid fa-chart-column" style={{marginRight: '8px'}}></i>Traffic Volume (24h)</span>
         <div className="traffic-chart__legend">
           <span className="traffic-chart__legend-item traffic-chart__legend-item--normal">Normal</span>
           <span className="traffic-chart__legend-item traffic-chart__legend-item--suspicious">Suspicious</span>

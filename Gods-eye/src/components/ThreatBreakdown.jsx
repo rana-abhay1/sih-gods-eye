@@ -46,7 +46,7 @@ export default function ThreatBreakdown({ threats }) {
 
   return (
     <div className="threat-breakdown">
-      <h3 className="threat-breakdown__title">📊 Threat Breakdown</h3>
+      <h3 className="threat-breakdown__title"><i className="fa-solid fa-chart-pie" style={{marginRight: '8px'}}></i>Threat Breakdown</h3>
       
       <div className="threat-breakdown__content">
         <div className="threat-breakdown__chart">

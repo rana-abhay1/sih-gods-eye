@@ -1,12 +1,13 @@
 import { SEVERITY_CONFIG } from '../data/threats'
 
 const TYPE_ICONS = {
-  'DDoS Attack': '⚡', 'Port Scanning': '🔍', 'Brute Force': '🔑',
-  'Data Exfiltration': '📤', 'Malware C2': '🦠', 'SQL Injection': '💉',
-  'XSS Attempt': '🌐', 'DNS Tunneling': '🚇', 'Phishing': '🎣',
-  'Ransomware': '🔒', 'Privilege Escalation': '⬆️', 'Lateral Movement': '↔️',
-  'Crypto Mining': '⛏️', 'Zero-Day Exploit': '⚠️', 'SYN Flood Attack': '⚡',
-  'Reconnaissance': '🔍',
+  'DDoS Attack': 'fa-solid fa-bolt', 'Port Scanning': 'fa-solid fa-crosshairs', 'Brute Force': 'fa-solid fa-key',
+  'Data Exfiltration': 'fa-solid fa-upload', 'Malware C2': 'fa-solid fa-virus', 'SQL Injection': 'fa-solid fa-database',
+  'XSS Attempt': 'fa-solid fa-code', 'DNS Tunneling': 'fa-solid fa-tunnel', 'Phishing': 'fa-solid fa-fish',
+  'Ransomware': 'fa-solid fa-lock', 'Privilege Escalation': 'fa-solid fa-arrow-up', 'Lateral Movement': 'fa-solid fa-arrows-left-right',
+  'Crypto Mining': 'fa-solid fa-microchip', 'Zero-Day Exploit': 'fa-solid fa-bug', 'SYN Flood Attack': 'fa-solid fa-water',
+  'Reconnaissance': 'fa-solid fa-eye', 'Anomalous Activity': 'fa-solid fa-circle-question',
+  'Malware C2 Beacon': 'fa-solid fa-satellite', 'Brute Force Attack': 'fa-solid fa-key',
 }
 
 export default function ThreatAlerts({ threats, selectedThreat, onSelectThreat }) {
@@ -31,7 +32,7 @@ export default function ThreatAlerts({ threats, selectedThreat, onSelectThreat }
   return (
     <div className="threat-alerts">
       <div className="threat-alerts__header">
-        <span className="threat-alerts__title">🚨 Threat Detection Alerts</span>
+        <span className="threat-alerts__title"><i className="fa-solid fa-triangle-exclamation" style={{marginRight: '8px'}}></i>Threat Detection Alerts</span>
         <div className="threat-alerts__filters">
           <span className="threat-alerts__filter threat-alerts__filter--all">All ({threats.length})</span>
           <span className="threat-alerts__filter" style={{ color: SEVERITY_CONFIG.critical.color }}>
@@ -78,7 +79,7 @@ export default function ThreatAlerts({ threats, selectedThreat, onSelectThreat }
                   >
                     <td className="threat-alerts__id">{threat.id}</td>
                     <td className="threat-alerts__type">
-                      <span>{icon}</span> {threat.type}
+                      <span><i className={icon}></i></span> {threat.type}
                     </td>
                     <td>
                       <span

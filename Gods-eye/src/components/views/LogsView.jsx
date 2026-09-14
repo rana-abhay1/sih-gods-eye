@@ -82,7 +82,7 @@ export default function LogsView() {
   return (
     <div className="view-page">
       <div className="view-page__header">
-        <h2 className="view-page__title">📋 System Logs</h2>
+        <h2 className="view-page__title"><i className="fa-solid fa-scroll" style={{marginRight: '10px'}}></i>System Logs</h2>
         <p className="view-page__subtitle">Real-time log stream from IDS, SIEM, Firewall, ML Engine, and System</p>
       </div>
 

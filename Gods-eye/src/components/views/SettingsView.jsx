@@ -27,14 +27,14 @@ export default function SettingsView({ stats }) {
   return (
     <div className="view-page">
       <div className="view-page__header">
-        <h2 className="view-page__title">⚙️ Settings</h2>
+        <h2 className="view-page__title"><i className="fa-solid fa-gear" style={{marginRight: '10px'}}></i>Settings</h2>
         <p className="view-page__subtitle">Configure monitoring parameters and system preferences</p>
       </div>
 
       <div className="settings-grid">
         {/* Monitoring Config */}
         <div className="settings-section">
-          <h3 className="settings-section__title">🔍 Monitoring Configuration</h3>
+          <h3 className="settings-section__title"><i className="fa-solid fa-magnifying-glass" style={{marginRight: '8px'}}></i>Monitoring Configuration</h3>
 
           <div className="settings-row">
             <div className="settings-row__info">
@@ -99,7 +99,7 @@ export default function SettingsView({ stats }) {
 
         {/* ML Model Config */}
         <div className="settings-section">
-          <h3 className="settings-section__title">🧠 ML Engine</h3>
+          <h3 className="settings-section__title"><i className="fa-solid fa-brain" style={{marginRight: '8px'}}></i>ML Engine</h3>
 
           <div className="settings-row">
             <div className="settings-row__info">
@@ -145,7 +145,7 @@ export default function SettingsView({ stats }) {
 
         {/* UI Preferences */}
         <div className="settings-section">
-          <h3 className="settings-section__title">🎨 Interface</h3>
+          <h3 className="settings-section__title"><i className="fa-solid fa-palette" style={{marginRight: '8px'}}></i>Interface</h3>
 
           <div className="settings-row">
             <div className="settings-row__info">
@@ -183,7 +183,7 @@ export default function SettingsView({ stats }) {
 
         {/* System Info */}
         <div className="settings-section">
-          <h3 className="settings-section__title">ℹ️ System Information</h3>
+          <h3 className="settings-section__title"><i className="fa-solid fa-circle-info" style={{marginRight: '8px'}}></i>System Information</h3>
           <div className="settings-info-grid">
             <div className="settings-info-item">
               <span className="settings-info-label">Dashboard Version</span>

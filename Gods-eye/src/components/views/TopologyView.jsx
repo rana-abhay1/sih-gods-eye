@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { NETWORK_NODES } from '../../data/threats'
 
 const NODE_ICONS = {
-  firewall: '🛡️', ids: '🔍', siem: '📊', webserver: '🌐',
-  db: '🗄️', app: '⚙️', monitor: '📺',
+  firewall: 'fa-solid fa-shield-halved', ids: 'fa-solid fa-magnifying-glass', siem: 'fa-solid fa-chart-line', webserver: 'fa-solid fa-globe',
+  db: 'fa-solid fa-database', app: 'fa-solid fa-server', monitor: 'fa-solid fa-desktop',
 }
 
 const NODE_COLORS = {
@@ -48,7 +48,7 @@ export default function TopologyView({ threats }) {
   return (
     <div className="view-page">
       <div className="view-page__header">
-        <h2 className="view-page__title">🗺️ Network Topology</h2>
+        <h2 className="view-page__title"><i className="fa-solid fa-diagram-project" style={{marginRight: '10px'}}></i>Network Topology</h2>
         <p className="view-page__subtitle">Monitored network infrastructure and traffic flow</p>
       </div>
 
@@ -131,8 +131,8 @@ export default function TopologyView({ threats }) {
                   fill={`${color}33`} stroke={color} strokeWidth={2}
                   filter={isHovered ? 'url(#glow)' : undefined} />
                 {/* Icon */}
-                <text x={center.x} y={center.y + 5} fontSize={18} textAnchor="middle">
-                  {NODE_ICONS[node.id] || '●'}
+                <text x={center.x} y={center.y + 5} fontSize={18} textAnchor="middle" fill="white">
+                  {NODE_ICONS[node.id] ? '●' : '●'}
                 </text>
                 {/* Label */}
                 <text x={center.x} y={center.y + 42} fill="rgba(255,255,255,0.7)"
@@ -152,7 +152,7 @@ export default function TopologyView({ threats }) {
         {/* Node detail panel */}
         {selectedNode && (
           <div className="topology-detail">
-            <h4>{NODE_ICONS[selectedNode] || '●'} {ALL_NODES.find(n => n.id === selectedNode)?.label}</h4>
+            <h4><i className={NODE_ICONS[selectedNode] || 'fa-solid fa-circle'} style={{marginRight: '8px'}}></i>{ALL_NODES.find(n => n.id === selectedNode)?.label}</h4>
             <div className="topology-detail__stat">
               <span>Type</span>
               <span>{ALL_NODES.find(n => n.id === selectedNode)?.type}</span>

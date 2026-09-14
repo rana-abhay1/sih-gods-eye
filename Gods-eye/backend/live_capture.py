@@ -127,6 +127,8 @@ class LiveCaptureEngine:
             'pps': 0, 'bytes_per_sec': 0,
             'unique_src_ips': set(), 'unique_dst_ips': set(),
             'protocols': collections.Counter(),
+            'ml_threats_detected': 0, 'ml_windows_analyzed': 0,
+            'ml_total_inference_ms': 0.0,
         }
         self._last_pps_calc = time.time()
         self._last_pps_count = 0
@@ -156,6 +158,11 @@ class LiveCaptureEngine:
             s['protocols'] = dict(s['protocols'])
             s['buffer_size'] = len(self._packets)
             s['uptime'] = round(time.time() - self._window_start, 1) if self._running else 0
+            # ML stats
+            ml_windows = s.get('ml_windows_analyzed', 0)
+            s['ml_threats_detected'] = s.get('ml_threats_detected', 0)
+            s['ml_windows_analyzed'] = ml_windows
+            s['ml_avg_inference_ms'] = round(s.get('ml_total_inference_ms', 0) / max(ml_windows, 1), 2)
             return s
 
     def get_available_interfaces(self) -> list:
@@ -183,6 +190,8 @@ class LiveCaptureEngine:
             'pps': 0, 'bytes_per_sec': 0,
             'unique_src_ips': set(), 'unique_dst_ips': set(),
             'protocols': collections.Counter(),
+            'ml_threats_detected': 0, 'ml_windows_analyzed': 0,
+            'ml_total_inference_ms': 0.0,
         }
 
         # Try real capture first, fall back to simulation
@@ -330,6 +339,16 @@ class LiveCaptureEngine:
 
     def _analysis_loop(self):
         """Periodically analyze buffered packets and emit threats."""
+        # Import ML components lazily to avoid circular imports
+        try:
+            from ml_features import MLFeatureExtractor
+            from ml_classifier import ThreatClassifier
+            ml_extractor = MLFeatureExtractor()
+            ml_classifier = ThreatClassifier()
+        except ImportError:
+            ml_extractor = None
+            ml_classifier = None
+
         while self._running:
             time.sleep(WINDOW_SECONDS)
             if not self._running:
@@ -347,7 +366,67 @@ class LiveCaptureEngine:
             if not features:
                 continue
 
+            # Rule-based detection (existing)
             threats = self._detect_window_threats(features, window_packets)
+
+            # ML-based detection (new)
+            ml_predictions = []
+            ml_features_dict = {}
+            if ml_extractor and ml_classifier:
+                try:
+                    ml_features = ml_extractor.extract_features(window_packets)
+                    ml_predictions = ml_classifier.predict(ml_features)
+                    ml_features_dict = {
+                        'src_ip_entropy': round(ml_features.src_ip_entropy, 2),
+                        'dst_ip_entropy': round(ml_features.dst_ip_entropy, 2),
+                        'port_scan_score': round(ml_features.port_scan_score, 3),
+                        'ddos_score': round(ml_features.dls_score, 3),
+                        'brute_force_score': round(ml_features.bf_score, 3),
+                        'exfil_score': round(ml_features.exfil_score, 3),
+                        'tunnel_score': round(ml_features.tunnel_score, 3),
+                        'syn_ack_ratio': round(ml_features.syn_ack_ratio, 3),
+                        'avg_payload_size': round(ml_features.avg_payload_size, 1),
+                    }
+                    # Convert ML predictions to Threat objects
+                    ts_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+                    src_ips = [p.src_ip for p in window_packets]
+                    dst_ips = [p.dst_ip for p in window_packets]
+                    most_common_src = max(set(src_ips), key=src_ips.count) if src_ips else 'unknown'
+                    most_common_dst = max(set(dst_ips), key=dst_ips.count) if dst_ips else 'unknown'
+                    for pred in ml_predictions:
+                        pred_dict = pred.to_dict()
+                        ml_threat = Threat(
+                            id=f"ML-{len(threats)+1:04d}",
+                            type=pred_dict['threat_type'],
+                            severity=pred_dict['severity'],
+                            confidence=pred_dict['confidence'],
+                            source_ip=most_common_src,
+                            source_port=0,
+                            dest_ip=most_common_dst,
+                            dest_port=0,
+                            protocol='Mixed',
+                            timestamp=ts_str,
+                            packets_analyzed=features.get('total_packets', 0),
+                            bytes_transferred=features.get('total_bytes', 0),
+                            status='active',
+                            risk_score=pred_dict['risk_score'],
+                            evidence=[Evidence(
+                                type='ML Classification',
+                                detail=f"Model: {pred_dict['model_version']}\nConfidence: {pred_dict['confidence']:.1%}\nRisk Score: {pred_dict['risk_score']:.1f}/10\nInference Time: {pred_dict['inference_time_ms']:.2f}ms",
+                                timestamp=ts_str,
+                            ).__dict__],
+                        )
+                        threats.append(ml_threat)
+                except Exception as e:
+                    print(f"[ML] Analysis error: {e}")
+
+            # Update ML stats
+            with self._lock:
+                self._stats['ml_windows_analyzed'] += 1
+                self._stats['ml_threats_detected'] += len(ml_predictions)
+                if ml_predictions:
+                    avg_time = sum(p.inference_time_ms for p in ml_predictions) / len(ml_predictions)
+                    self._stats['ml_total_inference_ms'] += avg_time
 
             suspicious_count = sum(1 for t in threats if t.severity in ('critical', 'high'))
             with self._lock:
@@ -359,12 +438,14 @@ class LiveCaptureEngine:
                     'type': 'threats',
                     'threats': [t.to_dict() for t in threats],
                     'window_packets': len(window_packets),
+                    'ml_threat_count': len(ml_predictions),
                     'features': {
                         'total_packets': features.get('total_packets', 0),
                         'pps': features.get('pps', 0),
                         'unique_src_ips': features.get('unique_src_ips', 0),
                         'unique_dst_ports': features.get('unique_dst_ports', 0),
                         'protocols': features.get('protocols', {}),
+                        **ml_features_dict,
                     },
                 })
 

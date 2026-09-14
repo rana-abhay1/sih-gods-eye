@@ -184,7 +184,7 @@ export default function LiveCapture({ onThreatsDetected, API_URL = 'http://local
   return (
     <div className="view-page">
       <div className="view-page__header">
-        <h2 className="view-page__title">🔴 Live Capture</h2>
+        <h2 className="view-page__title"><i className="fa-solid fa-satellite-dish" style={{marginRight: '10px'}}></i>Live Capture</h2>
         <p className="view-page__subtitle">
           Real-time network interface capture with AI/ML threat detection
         </p>
@@ -254,12 +254,12 @@ export default function LiveCapture({ onThreatsDetected, API_URL = 'http://local
               {connecting ? (
                 <><span className="lc-spinner"></span> Starting...</>
               ) : (
-                <>▶ Start Capture</>
+                <><i className="fa-solid fa-play" style={{marginRight: '6px'}}></i>Start Capture</>
               )}
             </button>
           ) : (
             <button className="lc-btn lc-btn--stop" onClick={handleStop}>
-              ⏹ Stop Capture
+              <i className="fa-solid fa-stop" style={{marginRight: '6px'}}></i>Stop Capture
             </button>
           )}
         </div>
@@ -332,7 +332,7 @@ export default function LiveCapture({ onThreatsDetected, API_URL = 'http://local
 
         {/* Event Log */}
         <div className="lc-events">
-          <h3 className="lc-section-title">📋 Capture Events</h3>
+          <h3 className="lc-section-title"><i className="fa-solid fa-scroll" style={{marginRight: '8px'}}></i>Capture Events</h3>
           <div className="lc-events__list">
             {events.map((ev, i) => (
               <div key={i} className={`lc-event lc-event--${ev.type}`}>

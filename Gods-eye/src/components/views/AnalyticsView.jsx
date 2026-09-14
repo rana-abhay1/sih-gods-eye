@@ -67,7 +67,7 @@ export default function AnalyticsView({ threats, history, stats }) {
   return (
     <div className="view-page">
       <div className="view-page__header">
-        <h2 className="view-page__title">📈 Analytics & Insights</h2>
+        <h2 className="view-page__title"><i className="fa-solid fa-chart-line" style={{marginRight: '10px'}}></i>Analytics & Insights</h2>
         <p className="view-page__subtitle">Threat intelligence analysis and ML model performance</p>
       </div>
 

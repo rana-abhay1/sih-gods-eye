@@ -43,7 +43,7 @@ export default function TrafficView({ packets, stats }) {
   return (
     <div className="view-page">
       <div className="view-page__header">
-        <h2 className="view-page__title">📡 Live Traffic Monitor</h2>
+        <h2 className="view-page__title"><i className="fa-solid fa-network-wired" style={{marginRight: '10px'}}></i>Live Traffic Monitor</h2>
         <p className="view-page__subtitle">Real-time one-directional IP traffic observation</p>
       </div>
 
@@ -93,9 +93,9 @@ export default function TrafficView({ packets, stats }) {
           <button className={`traffic-filter-btn ${filter === 'all' ? 'traffic-filter-btn--active' : ''}`}
             onClick={() => setFilter('all')}>All</button>
           <button className={`traffic-filter-btn ${filter === 'suspicious' ? 'traffic-filter-btn--active traffic-filter-btn--danger' : ''}`}
-            onClick={() => setFilter('suspicious')}>⚠️ Suspicious</button>
+            onClick={() => setFilter('suspicious')}><i className="fa-solid fa-triangle-exclamation" style={{marginRight: '4px'}}></i>Suspicious</button>
           <button className={`traffic-filter-btn ${filter === 'normal' ? 'traffic-filter-btn--active traffic-filter-btn--ok' : ''}`}
-            onClick={() => setFilter('normal')}>✅ Normal</button>
+            onClick={() => setFilter('normal')}><i className="fa-solid fa-circle-check" style={{marginRight: '4px'}}></i>Normal</button>
         </div>
         <div className="traffic-filters__group">
           {['all', ...Object.keys(PROTOCOL_COLORS)].map(p => (

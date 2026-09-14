@@ -2,7 +2,7 @@ export default function EvidencePanel({ threat }) {
   if (!threat) {
     return (
       <div className="evidence-panel evidence-panel--empty">
-        <div className="evidence-panel__empty-icon">🔬</div>
+        <div className="evidence-panel__empty-icon"><i className="fa-solid fa-magnifying-glass"></i></div>
         <h3>Select a Threat</h3>
         <p>Click on any threat in the alerts table to view supporting evidence</p>
       </div>
@@ -20,12 +20,15 @@ export default function EvidencePanel({ threat }) {
   const packetsAnalyzed = threat.packetsAnalyzed || threat.packets_analyzed || 0
   const riskScore = threat.riskScore || threat.risk_score || 0
   const evidence = threat.evidence || []
+  const featureImportance = threat.feature_importance || {}
+  const modelVersion = threat.model_version || 'rule_v1'
+  const inferenceTime = threat.inference_time_ms || 0
 
   return (
     <div className="evidence-panel">
       <div className="evidence-panel__header">
         <h3 className="evidence-panel__title">
-          <span className="evidence-panel__icon">🔬</span>
+          <span className="evidence-panel__icon"><i className="fa-solid fa-magnifying-glass"></i></span>
           Evidence — {threat.id}
         </h3>
         <span
@@ -88,16 +91,33 @@ export default function EvidencePanel({ threat }) {
       </div>
 
       <div className="evidence-panel__ml">
-        <h4>🧠 ML Analysis</h4>
+        <h4><i className="fa-solid fa-brain" style={{marginRight: '6px'}}></i>ML Analysis</h4>
         <div className="evidence-panel__ml-content">
           <div className="evidence-panel__ml-row">
             <span>Model</span>
-            <span>Rule-Based + Statistical</span>
+            <span>{modelVersion}</span>
+          </div>
+          <div className="evidence-panel__ml-row">
+            <span>Inference Time</span>
+            <span>{inferenceTime > 0 ? `${inferenceTime.toFixed(2)}ms` : 'N/A'}</span>
           </div>
           <div className="evidence-panel__ml-row">
             <span>Features Used</span>
             <span>Protocol, Ports, SYN Ratio, Payload, DNS</span>
           </div>
+          {Object.keys(featureImportance).length > 0 && (
+            <>
+              <div className="evidence-panel__ml-row" style={{ marginTop: '8px' }}>
+                <span style={{ fontWeight: '600' }}>Top Indicators</span>
+              </div>
+              {Object.entries(featureImportance).slice(0, 5).map(([feature, value]) => (
+                <div key={feature} className="evidence-panel__ml-row">
+                  <span style={{ fontSize: '10px' }}>{feature}</span>
+                  <span>{typeof value === 'number' ? value.toFixed(3) : value}</span>
+                </div>
+              ))}
+            </>
+          )}
           <div className="evidence-panel__ml-row">
             <span>Training Data</span>
             <span>CICIDS2017 + UNSW-NB15 Datasets</span>

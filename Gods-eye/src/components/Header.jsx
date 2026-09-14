@@ -49,7 +49,7 @@ export default function Header({ activeView, connected, captureRunning }) {
           <span className="header__date">{formatDate(time)}</span>
         </div>
         <div className="header__user">
-          <div className="header__avatar">SC</div>
+          <div className="header__avatar"><i className="fa-solid fa-user-secret"></i></div>
           <div className="header__user-info">
             <span className="header__user-name">SOC Analyst</span>
             <span className="header__user-role">Security Ops</span>

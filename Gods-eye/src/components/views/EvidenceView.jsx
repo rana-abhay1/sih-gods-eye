@@ -30,7 +30,7 @@ export default function EvidenceView({ threats }) {
   return (
     <div className="view-page">
       <div className="view-page__header">
-        <h2 className="view-page__title">🔬 Evidence Chain</h2>
+        <h2 className="view-page__title"><i className="fa-solid fa-link" style={{marginRight: '10px'}}></i>Evidence Chain</h2>
         <p className="view-page__subtitle">Collected forensic evidence from detected threats</p>
       </div>
 
